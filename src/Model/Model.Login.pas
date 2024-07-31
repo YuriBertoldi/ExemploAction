@@ -13,30 +13,27 @@ type
 
   TLogin = class
   public
-    function AuthenticateUser(const Usuario: TUsuario): TLoginResult;
+    function AuthenticateUser(const User: TUser): TLoginResult;
   end;
 
 implementation
 
-// O codigo acima nao possui boas praticas de seguranca, pois a senha e o usuario estao hardcoded. Para melhorar a seguranca, deve-se armazenar a senha e o usuario em um banco de dados e validar as credenciais do usuario com o banco de dados. Al√©m disso, deve-se usar algoritmos de criptografia para armazenar a senha no banco de dados.
-
-function TLogin.AuthenticateUser(const Usuario: TUsuario): TLoginResult;
+function TLogin.AuthenticateUser(const User: TUser): TLoginResult;
 begin
-  if (Usuario.Username = 'usuario' ) and (Usuario.Password = 'senha') then
+  if (User.Username = 'user' ) and (User.Password = 'password') then
     Result := lrSuccess
   else
     Result := lrInvalidCredentials;
 end;
-
 
 { TLoginResultHelper }
 
 function TLoginResultHelper.Text: string;
 begin
   case self of
-    lrSuccess           : Result := 'Autenticado com sucesso.';
-    lrInvalidCredentials: Result := 'Usu·rio ou senha incorretos.';
-    lrServerError       : Result := 'Erro no servidor.';
+    lrSuccess           : Result := 'Authenticated successfully.';
+    lrInvalidCredentials: Result := 'Incorrect username or password.';
+    lrServerError       : Result := 'Server error.';
   end;
 end;
 

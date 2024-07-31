@@ -18,7 +18,10 @@ type
 
 implementation
 
-////A melhoria de segurança para o codigo acima seria a utilizacao de um mecanismo de criptografia para armazenar e validar as credenciais do usuario. Além disso, seria interessante adicionar um mecanismo de autenticacao de dois fatores para aumentar a seguranca.
+// O codigo acima nao possui boas praticas de seguranca, pois a senha e o usuario estao hardcoded.
+//Para melhorar a seguranca, deve-se armazenar a senha e o usuario em um banco de dados e validar as
+//credenciais do usuario com o banco de dados. Além disso, deve-se usar algoritmos de
+//criptografia para armazenar a senha no banco de dados.
 
 function TLogin.AuthenticateUser(const Usuario: TUsuario): TLoginResult;
 begin
@@ -39,6 +42,7 @@ begin
     lrServerError       : Result := 'Erro no servidor.';
   end;
 end;
+
 
 end.
 

@@ -13,16 +13,24 @@ type
 
   TLogin = class
   public
-    function AuthenticateUser(const Usuario: TUsuario): TLoginResult;
+    function AuthenticateUser(const User: TUser): TLoginResult;
   end;
 
 implementation
 
-// Função para autenticar usuario, verificando se o nome de usuario e senha estão corretos. Se sim, retorna lrSuccess, caso contrário, retorna lrInvalidCredentials
-
-function TLogin.AuthenticateUser(const Usuario: TUsuario): TLoginResult;
+////Teste unitario
+procedure TestAuthenticateUser;
+var
+  User: TUsuario;
+  LoginResult: TLoginResult;
 begin
-  if (Usuario.Username = 'usuario' ) and (Usuario.Password = 'senha') then
+
+end;
+
+
+function TLogin.AuthenticateUser(const User: TUser): TLoginResult;
+begin
+  if (Usuario.Username = 'user' ) and (Usuario.Password = 'password') then
     Result := lrSuccess
   else
     Result := lrInvalidCredentials;

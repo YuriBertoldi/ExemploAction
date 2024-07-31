@@ -13,19 +13,18 @@ type
 
   TLogin = class
   public
-    function AuthenticateUser(const Usuario: TUsuario): TLoginResult;
+    function AuthenticateUser(const User: TUser): TLoginResult;
   end;
 
 implementation
 
-function TLogin.AuthenticateUser(const Usuario: TUsuario): TLoginResult;
+function TLogin.AuthenticateUser(const User: TUser): TLoginResult;
 begin
-  if (Usuario.Username = 'usuario' ) and (Usuario.Password = 'senha') then
+  if (User.Username = 'user' ) and (User.Password = 'password') then
     Result := lrSuccess
   else
     Result := lrInvalidCredentials;
 end;
-
 
 { TLoginResultHelper }
 

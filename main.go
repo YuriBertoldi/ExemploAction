@@ -24,32 +24,32 @@ func main() {
 	fmt.Println("SECRET:", os.Getenv("OPENAI_API_KEY"))
 	fmt.Println("variable:", os.Getenv("APIKEY"))
 	CatchApiKeyOpenAI()
-	// Obter o hash do commit atual
+	// Get the hash of the current commit
 	commitHash := os.Getenv("GITHUB_SHA")
 	fmt.Println("Hash do commit:", commitHash)
 
-	// Obter as alterações do commit
+	// Get changes from commit
 	cmd := exec.Command("git", "diff-tree", "--no-commit-id", "--name-only", "-r", commitHash)
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Println("Erro ao obter as alterações do commit:", err)
+		fmt.Println("Error getting changes from commit:", err)
 		os.Exit(1)
 	}
 
-	// Separar os nomes dos arquivos alterados em um slice
+	// Separate changed file names in a slice
 	changedFiles := strings.Split(string(output), "\n")
 
-	// Procurar e requisitar unit para o ChatGPT, apenas .pas
+	// Search and request units for ChatGPT, .pas only
 	for _, file := range changedFiles {
-		fmt.Printf("Testando extensão : %v\n", file)
+		fmt.Printf("Testing extension : %v\n", file)
 		if strings.HasSuffix(file, ".pas") {
-			fmt.Printf("Procurando Tag : %v\n", file)
+			fmt.Printf("Searching Tag : %v\n", file)
 			for ExistTags(file) {
 				err := ProcessInDelphiFile(file)
 				if err != nil {
-					fmt.Printf("Erro ao processar o arquivo %s: %v\n", file, err)
+					fmt.Printf("Error processing the file %s: %v\n", file, err)
 				} else {
-					fmt.Printf("Arquivo processado: %s\n", file)
+					fmt.Printf("File processed: %s\n", file)
 				}
 			}
 		}
@@ -59,20 +59,20 @@ func main() {
 func ExistTags(filename string) bool {
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Printf("Erro ao ler arquivo : %v\n", err.Error())
+		fmt.Printf("Error reading file: %v\n", err.Error())
 		return false
 	}
 
-	// Verificar se há o padrão de comentário em Delphi (//)
+	// Check for the comment pattern in Delphi (//)
 	pattern := "(//<" + TAG_SECURITY + ">|//<" + TAG_TEST + ">|//<" + TAG_DOCUMENT + ">)"
 	match, err := regexp.Match(pattern, content)
 
 	if err != nil {
-		fmt.Printf("Erro ao usar regex : %v\n", err.Error())
+		fmt.Printf("Error when using regex : %v\n", err.Error())
 		return false
 	}
 
-	fmt.Printf("Resultado Regex : %v\n", match)
+	fmt.Printf("Result Regex : %v\n", match)
 	return match
 
 }
@@ -80,22 +80,22 @@ func ExistTags(filename string) bool {
 func ExtractCodeTag(content string, tag string) (string, error) {
 	var result string
 
-	// Define o padrão de comentários de abertura e fechamento
+	// Sets the opening and closing comment pattern
 	startComment := fmt.Sprintf("//<%s>", tag)
 	endComment := fmt.Sprintf("//</%s>", tag)
 
 	fmt.Printf("Extraindo tag : %v\n", startComment)
 
-	// Monta a expressão regular com os grupos de captura
+	// Assemble the regular expression with capturing groups
 	pattern := fmt.Sprintf(`(?s)%s(.*?)%s`, regexp.QuoteMeta(startComment), regexp.QuoteMeta(endComment))
 	regex := regexp.MustCompile(pattern)
 
-	// Encontra a primeira correspondência no texto
+	// Finds the first match in the text
 	match := regex.FindStringSubmatch(content)
 
-	// Verifica se a tag foi encontrada
+	// Checks if the tag was found
 	if len(match) >= 2 {
-		// Extrai o texto capturado (bloco de código)
+		// Extracts captured text (code block)
 		code := match[1]
 		return code, nil
 	}
@@ -109,20 +109,20 @@ func FetchCodeFirstTag(code string) (string, string, string) {
 
 	result, _ = ExtractCodeTag(code, TAG_DOCUMENT)
 	tag = TAG_DOCUMENT
-	action = "Crie o comentário do fonte a seguir e me devolva o comentário sem acentos na escrita do comentário: "
+	action = "Create the following source comment and return the comment to me without accents in the comment writing: "
 	if result == "" {
 		result, _ = ExtractCodeTag(code, TAG_TEST)
 		tag = TAG_TEST
-		action = "Crie um metodo de teste unitario para o fonte a seguir: "
+		action = "Create a unit test method for the following source: "
 	}
 	if result == "" {
 		result, _ = ExtractCodeTag(code, TAG_SECURITY)
 		tag = TAG_SECURITY
-		action = "Realize uma analise de segurança no fonte a seguir e me devolva um comentário com as melhorias de segurança sem acentos na escrita do comentário: "
+		action = "Carry out a security analysis on the source below and send me a comment back with the security improvements without accents in the comment writing: "
 	}
 
 	if result == "" {
-		panic("Nenhum codigo encontrado")
+		panic("No codes found")
 	}
 
 	return result, tag, action
@@ -133,7 +133,7 @@ func CatchApiKeyOpenAI() string {
 	if result == "" {
 		println("ApiKey:" + result)
 		os.Exit(1)
-		panic("Erro: Chave da API não encontrada. Verifique se a secret OPENAI_API_KEY está configurada.")
+		panic("Error: API key not found. Check if the secret OPENAI_API_KEY is configured.")
 	}
 	return result
 }
@@ -144,13 +144,13 @@ func GetIndentation(code string, tagUsada string) string {
 	startIndex := strings.Index(string(code), startTag)
 	endIndex := strings.Index(string(code), endTag)
 
-	// Verificar se as tags foram encontradas
+	// Check if tags were found
 	if startIndex != -1 && endIndex != -1 {
-		// Obter a indentação do bloco de código original
+		// Get the indentation of the original code block
 		indentation := ""
 		lines := strings.Split(code, "\n")
 		if len(lines) > 0 {
-			// Encontrar o espaço ou tabulação no início da primeira linha
+			// Find the space or tab at the beginning of the first line
 			for _, ch := range lines[0] {
 				if ch == ' ' || ch == '\t' {
 					indentation += string(ch)
@@ -169,27 +169,27 @@ func ProcessInDelphiFile(filename string) error {
 	var code string
 	var action string
 
-	// Ler o conteúdo do arquivo
+	// Read file contents
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Printf("Erro ao ler arquivo : %v\n", err.Error())
+		fmt.Printf("Error reading file : %v\n", err.Error())
 	}
 
-	// Busca primeiro bloco de codigo de tags encontrado
+	// Search first tag code block found
 	code, TagUsada, action = FetchCodeFirstTag(string(content))
 
-	//Pegar token da Api do chatGPT
+	//Get token from chatGPT Api
 	apiKey := CatchApiKeyOpenAI()
 
-	prompt := action + string(code) // Usar o conteúdo do arquivo como prompt com a ação que o chatGPT deve realizar
+	prompt := action + string(code) // Use the file contents as a prompt with what action chatGPT should take
 
-	fmt.Printf("Processando tag : %v\n", TagUsada)
+	fmt.Printf("Processing tag : %v\n", TagUsada)
 
 	//Montando Body da requisição
 	data := map[string]interface{}{
 		"prompt":      prompt,
-		"max_tokens":  2048,               // Defina o número máximo de tokens desejado
-		"model":       "text-davinci-003", // Especifique o modelo desejado aqui
+		"max_tokens":  2048,               // Set the desired maximum number of tokens
+		"model":       "text-davinci-003", // Specify the desired model here
 		"temperature": 0,
 	}
 
@@ -198,7 +198,7 @@ func ProcessInDelphiFile(filename string) error {
 		return err
 	}
 
-	//Criando request
+	//request
 	request, err := http.NewRequest("POST", "https://api.openai.com/v1/completions", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
@@ -207,7 +207,7 @@ func ProcessInDelphiFile(filename string) error {
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", "Bearer "+apiKey)
 
-	// Fazendo a chamada para a API da OpenAI
+	// Call in API da OpenAI
 	client := http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
@@ -215,14 +215,14 @@ func ProcessInDelphiFile(filename string) error {
 	}
 	defer response.Body.Close()
 
-	//pegando retorno da api
+	//result api
 	responseData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return err
 	}
 	fmt.Printf("Resposta da api : %v\n", string(responseData))
 
-	// Verificar se há erros na resposta
+	// error return
 	var responseError struct {
 		Error struct {
 			Message string `json:"message"`
@@ -234,12 +234,12 @@ func ProcessInDelphiFile(filename string) error {
 		return err
 	}
 
-	// Se a API retornar algum erro, lidar aqui
+	// If the API returns any errors, deal here
 	if responseError.Error.Message != "" {
 		return errors.New(responseError.Error.Message)
 	}
 
-	// Extrair a tag "text" da resposta
+	// Extract the "text" tag from the response
 	var responseText struct {
 		Choices []struct {
 			Text string `json:"text"`
@@ -250,20 +250,20 @@ func ProcessInDelphiFile(filename string) error {
 	if err != nil {
 		return err
 	}
-	// Verificar se há escolhas na resposta do chatGPT
+	// Check chatGPT response for choices
 	if len(responseText.Choices) > 0 {
-		// Obter o texto da primeira escolha
+		// Get the text of the first choice
 		text := responseText.Choices[0].Text
-		fmt.Println("Texto retornado:", text)
+		fmt.Println("Text return:", text)
 
-		// Encontrar a posição das tags no conteúdo original
+		// Finding the position of tags in the original content
 		startTag := fmt.Sprintf("//<%s>", TagUsada)
 		endTag := fmt.Sprintf("//</%s>", TagUsada)
 		startIndex := strings.Index(string(content), startTag)
 		endIndex := strings.Index(string(content), endTag)
 		indentation := GetIndentation(code, TagUsada)
 
-		// Aplicar a indentação e comentario ao texto retornado pela API
+		// Apply indentation and comments to the text returned by the API
 		indentedText := ""
 		lines := strings.Split(text, "\n")
 		for _, line := range lines {
@@ -276,35 +276,35 @@ func ProcessInDelphiFile(filename string) error {
 			}
 		}
 
-		//Adicionando codigo enviado para api no slice para que não seja removido do arquivo.
+		//Adding code sent to the api in the slice so that it is not removed from the file.
 		indentedText += code
 
-		// Verificar se as tags foram encontradas
+		// Check if tags were found
 		if startIndex != -1 && endIndex != -1 {
-			// Criar um novo slice de bytes para o novo conteúdo
+			// Create a new byte slice for the new content
 			newContent := make([]byte, 0, len(content)+len(indentedText)-len(code))
 
-			// Copiar o conteúdo antes da primeira tag
+			// Copy content before first tag
 			newContent = append(newContent, content[:startIndex]...)
 
-			// Copiar o texto retornado pela API
+			// Copy the text returned by the API
 			newContent = append(newContent, []byte(indentedText)...)
 
-			// Copiar o conteúdo após a última tag
+			// Copy content after last tag
 			newContent = append(newContent, content[endIndex+len(endTag):]...)
 
-			fmt.Println("Texto gravado:", string(newContent))
+			fmt.Println("Engraved text:", string(newContent))
 
-			// Escrever o conteúdo modificado de volta para o arquivo
+			// Write modified content back to file
 			err = ioutil.WriteFile(filename, newContent, os.ModePerm)
 			if err != nil {
 				return err
 			}
 		} else {
-			return errors.New("tags não encontradas no arquivo")
+			return errors.New("tags not found in file")
 		}
 	} else {
-		return errors.New("nenhuma escolha encontrada na resposta")
+		return errors.New("No choice found in answer")
 	}
 
 	return nil

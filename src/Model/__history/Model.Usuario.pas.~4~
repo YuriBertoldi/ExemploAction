@@ -20,18 +20,18 @@ type
 
 implementation
 
-constructor TUser.Create;
+constructor TUsuario.Create;
 begin
   FUsername := EmptyStr;
   FPassword := EmptyStr;
 end;
 
-procedure TUser.SetPassword(const Value: string);
+procedure TUsuario.SetPassword(const Value: string);
 begin
   FPassword := Value;
 end;
 
-procedure TUser.SetUsername(const Value: string);
+procedure TUsuario.SetUsername(const Value: string);
 begin
   FUsername := Value;
 end;

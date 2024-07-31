@@ -13,14 +13,24 @@ type
 
   TLogin = class
   public
-    function AuthenticateUser(const Usuario: TUsuario): TLoginResult;
+    function AuthenticateUser(const Usuario: TUser): TLoginResult;
   end;
 
 implementation
 
-function TLogin.AuthenticateUser(const Usuario: TUsuario): TLoginResult;
+////Teste unitario
+procedure TestAuthenticateUser;
+var
+  User: TUsuario;
+  LoginResult: TLoginResult;
 begin
-  if (Usuario.Username = 'usuario' ) and (Usuario.Password = 'senha') then
+
+end;
+
+
+function TLogin.AuthenticateUser(const User: TUser): TLoginResult;
+begin
+  if (Usuario.Username = 'user' ) and (Usuario.Password = 'password') then
     Result := lrSuccess
   else
     Result := lrInvalidCredentials;
@@ -37,6 +47,7 @@ begin
     lrServerError       : Result := 'Erro no servidor.';
   end;
 end;
+
 
 end.
 
